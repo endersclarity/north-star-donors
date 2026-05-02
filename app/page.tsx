@@ -6,8 +6,8 @@ import { cacheRead, cacheWrite, TTL_SHORT } from '@/lib/cache'
 import Sidebar from '@/components/Sidebar'
 
 /* â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-type TaskLabel = 'Proof Reading' | 'Graphic Design' | 'Grant Writing' | 'Blog Post' | 'Brainstorming' | 'Research' | 'Technical' | 'Editing' | 'Other'
-type TaskDomain = 'Donors' | 'Members' | 'Sponsors' | 'Grants' | 'Earned Revenue'
+type TaskLabel = 'Proof Reading' | 'Graphic Design' | 'Grant Writing' | 'Blog Post' | 'Brainstorming' | 'Research' | 'Technical' | 'Editing' | 'Stakeholder Outreach' | 'Other'
+type TaskDomain = 'Donors' | 'Members' | 'Sponsors' | 'Grants' | 'Earned Revenue' | 'Infrastructure'
 type TaskStatus = 'todo' | 'in_progress' | 'done'
 
 interface Task {
@@ -23,8 +23,8 @@ interface Task {
   created_at: string
 }
 
-const LABELS: TaskLabel[] = ['Proof Reading', 'Graphic Design', 'Grant Writing', 'Blog Post', 'Brainstorming', 'Research', 'Technical', 'Editing', 'Other']
-const DOMAINS: TaskDomain[] = ['Donors', 'Members', 'Sponsors', 'Grants', 'Earned Revenue']
+const LABELS: TaskLabel[] = ['Proof Reading', 'Graphic Design', 'Grant Writing', 'Blog Post', 'Brainstorming', 'Research', 'Technical', 'Editing', 'Stakeholder Outreach', 'Other']
+const DOMAINS: TaskDomain[] = ['Donors', 'Members', 'Sponsors', 'Grants', 'Earned Revenue', 'Infrastructure']
 
 const LABEL_COLORS: Record<TaskLabel, string> = {
   'Proof Reading':  'bg-purple-100 text-purple-700 border-purple-200',
@@ -35,6 +35,7 @@ const LABEL_COLORS: Record<TaskLabel, string> = {
   'Research':       'bg-cyan-100 text-cyan-700 border-cyan-200',
   'Technical':      'bg-slate-100 text-slate-700 border-slate-200',
   'Editing':        'bg-orange-100 text-orange-700 border-orange-200',
+  'Stakeholder Outreach': 'bg-yellow-100 text-yellow-800 border-yellow-200',
   'Other':          'bg-stone-100 text-stone-500 border-stone-200',
 }
 
@@ -44,6 +45,7 @@ const DOMAIN_COLORS: Record<TaskDomain, string> = {
   'Sponsors':       'bg-violet-50 text-violet-700 border-violet-200',
   'Grants':         'bg-sky-50 text-sky-700 border-sky-200',
   'Earned Revenue': 'bg-lime-50 text-lime-700 border-lime-200',
+  'Infrastructure': 'bg-zinc-100 text-zinc-700 border-zinc-200',
 }
 
 const STATUS_CYCLE: Record<TaskStatus, TaskStatus> = { todo: 'in_progress', in_progress: 'done', done: 'todo' }
