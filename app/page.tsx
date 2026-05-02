@@ -7,12 +7,14 @@ import Sidebar from '@/components/Sidebar'
 
 /* â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 type TaskLabel = 'Proof Reading' | 'Graphic Design' | 'Grant Writing' | 'Blog Post' | 'Brainstorming' | 'Research' | 'Technical' | 'Editing' | 'Other'
+type TaskDomain = 'Donors' | 'Members' | 'Sponsors' | 'Grants' | 'Earned Revenue'
 type TaskStatus = 'todo' | 'in_progress' | 'done'
 
 interface Task {
   id: string
   title: string
-  label: TaskLabel | null
+  label: TaskLabel[] | null
+  domain: TaskDomain[] | null
   status: TaskStatus
   due_date: string | null
   notes: string | null
@@ -22,6 +24,7 @@ interface Task {
 }
 
 const LABELS: TaskLabel[] = ['Proof Reading', 'Graphic Design', 'Grant Writing', 'Blog Post', 'Brainstorming', 'Research', 'Technical', 'Editing', 'Other']
+const DOMAINS: TaskDomain[] = ['Donors', 'Members', 'Sponsors', 'Grants', 'Earned Revenue']
 
 const LABEL_COLORS: Record<TaskLabel, string> = {
   'Proof Reading':  'bg-purple-100 text-purple-700 border-purple-200',
@@ -33,6 +36,14 @@ const LABEL_COLORS: Record<TaskLabel, string> = {
   'Technical':      'bg-slate-100 text-slate-700 border-slate-200',
   'Editing':        'bg-orange-100 text-orange-700 border-orange-200',
   'Other':          'bg-stone-100 text-stone-500 border-stone-200',
+}
+
+const DOMAIN_COLORS: Record<TaskDomain, string> = {
+  'Donors':         'bg-rose-50 text-rose-700 border-rose-200',
+  'Members':        'bg-teal-50 text-teal-700 border-teal-200',
+  'Sponsors':       'bg-violet-50 text-violet-700 border-violet-200',
+  'Grants':         'bg-sky-50 text-sky-700 border-sky-200',
+  'Earned Revenue': 'bg-lime-50 text-lime-700 border-lime-200',
 }
 
 const STATUS_CYCLE: Record<TaskStatus, TaskStatus> = { todo: 'in_progress', in_progress: 'done', done: 'todo' }
@@ -126,7 +137,12 @@ function TaskRow({
           )}
 
           <div className="flex items-center gap-2 mt-1 flex-wrap">
-            {task.label && <span className={`inline-flex px-1.5 py-0.5 rounded border text-[10px] font-medium ${LABEL_COLORS[task.label as TaskLabel]}`}>{task.label}</span>}
+            {task.domain?.map(d => (
+              <span key={`d-${d}`} className={`inline-flex px-1.5 py-0.5 rounded border text-[10px] font-medium ${DOMAIN_COLORS[d as TaskDomain] ?? 'bg-stone-100 text-stone-500 border-stone-200'}`}>{d}</span>
+            ))}
+            {task.label?.map(l => (
+              <span key={`l-${l}`} className={`inline-flex px-1.5 py-0.5 rounded border text-[10px] font-medium ${LABEL_COLORS[l as TaskLabel] ?? 'bg-stone-100 text-stone-500 border-stone-200'}`}>{l}</span>
+            ))}
             {task.assigned_to && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-medium bg-stone-100 text-stone-500 border-stone-200">
                 <User size={9} />{task.assigned_to}
@@ -247,6 +263,14 @@ function TaskAttachment({ url, onReplace, uploading }: { url: string; onReplace:
 type GoalStatus = 'Not started' | 'In progress' | 'On track' | 'Complete' | 'Blocked'
 type GoalType   = 'annual' | 'future' | 'three_year_vision'
 
+type GoalUpdateEntry = { type: 'details_link'; url: string; label?: string } | { type: string; [k: string]: unknown }
+
+function getDetailsUrl(updates: unknown): string | null {
+  if (!Array.isArray(updates)) return null
+  const link = updates.find((e): e is GoalUpdateEntry => typeof e === 'object' && e !== null && (e as { type?: unknown }).type === 'details_link')
+  return link && 'url' in link && typeof link.url === 'string' ? link.url : null
+}
+
 interface StrategicGoal {
   id: number
   title: string
@@ -254,7 +278,7 @@ interface StrategicGoal {
   status: GoalStatus
   lead: string | null
   due_date: string | null
-  updates: string | null
+  updates: GoalUpdateEntry[] | string | null
   goal_type: GoalType
   category: string
 }
@@ -280,13 +304,20 @@ export default function Dashboard() {
   const [goals, setGoals] = useState<StrategicGoal[]>([])
   const [goalsLoading, setGoalsLoading] = useState(true)
   const [goalTab, setGoalTab] = useState<GoalType>('annual')
-  const [expandedGoalId, setExpandedGoalId] = useState<number | null>(null)
 
   const [showAdd, setShowAdd] = useState(false)
   const [newTitle, setNewTitle] = useState('')
-  const [newLabel, setNewLabel] = useState<TaskLabel | ''>('')
+  const [newLabels, setNewLabels] = useState<TaskLabel[]>([])
+  const [newDomains, setNewDomains] = useState<TaskDomain[]>([])
   const [newDue, setNewDue] = useState('')
   const [newNotes, setNewNotes] = useState('')
+
+  function toggleNewLabel(l: TaskLabel) {
+    setNewLabels(prev => prev.includes(l) ? prev.filter(x => x !== l) : [...prev, l])
+  }
+  function toggleNewDomain(d: TaskDomain) {
+    setNewDomains(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d])
+  }
   const [saving, setSaving] = useState(false)
 
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -325,10 +356,12 @@ export default function Dashboard() {
     if (!newTitle.trim()) return
     setSaving(true)
     await supabase.from('tasks').insert({
-      title: newTitle.trim(), label: newLabel || null,
+      title: newTitle.trim(),
+      label: newLabels.length ? newLabels : null,
+      domain: newDomains.length ? newDomains : null,
       due_date: newDue || null, notes: newNotes.trim() || null, status: 'todo',
     })
-    setNewTitle(''); setNewLabel(''); setNewDue(''); setNewNotes('')
+    setNewTitle(''); setNewLabels([]); setNewDomains([]); setNewDue(''); setNewNotes('')
     setShowAdd(false); setSaving(false)
     await loadTasks()
   }
@@ -398,7 +431,7 @@ export default function Dashboard() {
     e.target.value = ''
   }
 
-  const filtered = filterLabel === 'all' ? tasks : tasks.filter(t => t.label === filterLabel)
+  const filtered = filterLabel === 'all' ? tasks : tasks.filter(t => t.label?.includes(filterLabel))
   const byTab = filtered.filter(t => t.status === taskTab)
 
   const todoCnt      = filtered.filter(t => t.status === 'todo').length
@@ -460,18 +493,37 @@ export default function Dashboard() {
               <h3 className="text-sm font-semibold text-stone-700">New Task</h3>
               <input autoFocus className={inputCls} placeholder="Task title..." value={newTitle} onChange={e => setNewTitle(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) addTask() }} />
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs text-stone-400 mb-1 block">Label</label>
-                  <select className={inputCls} value={newLabel} onChange={e => setNewLabel(e.target.value as TaskLabel | '')}>
-                    <option value="">No label</option>
-                    {LABELS.map(l => <option key={l} value={l}>{l}</option>)}
-                  </select>
+              <div>
+                <label className="text-xs text-stone-400 mb-1 block">Domain (what part of fund development)</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {DOMAINS.map(d => {
+                    const on = newDomains.includes(d)
+                    return (
+                      <button key={d} type="button" onClick={() => toggleNewDomain(d)}
+                        className={`inline-flex px-2 py-0.5 rounded border text-[11px] font-medium transition-all ${on ? DOMAIN_COLORS[d] : 'bg-stone-50 text-stone-400 border-stone-200 hover:bg-stone-100'}`}>
+                        {d}
+                      </button>
+                    )
+                  })}
                 </div>
-                <div>
-                  <label className="text-xs text-stone-400 mb-1 block">Due Date</label>
-                  <input type="date" className={inputCls} value={newDue} onChange={e => setNewDue(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs text-stone-400 mb-1 block">Label (kind of work)</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {LABELS.map(l => {
+                    const on = newLabels.includes(l)
+                    return (
+                      <button key={l} type="button" onClick={() => toggleNewLabel(l)}
+                        className={`inline-flex px-2 py-0.5 rounded border text-[11px] font-medium transition-all ${on ? LABEL_COLORS[l] : 'bg-stone-50 text-stone-400 border-stone-200 hover:bg-stone-100'}`}>
+                        {l}
+                      </button>
+                    )
+                  })}
                 </div>
+              </div>
+              <div>
+                <label className="text-xs text-stone-400 mb-1 block">Due Date</label>
+                <input type="date" className={inputCls} value={newDue} onChange={e => setNewDue(e.target.value)} />
               </div>
               <div>
                 <label className="text-xs text-stone-400 mb-1 block">Notes</label>
@@ -567,7 +619,7 @@ export default function Dashboard() {
                     {/* Tab toggle */}
                     <div className="flex items-center gap-1 mt-3">
                       {(['annual', 'future', 'three_year_vision'] as GoalType[]).map(t => (
-                        <button key={t} onClick={() => { setGoalTab(t); setExpandedGoalId(null) }}
+                        <button key={t} onClick={() => setGoalTab(t)}
                           className="text-[11px] px-2.5 py-1 rounded-full font-medium transition-colors"
                           style={{
                             background: goalTab === t ? 'var(--gold)' : '#f5f0ea',
@@ -587,7 +639,6 @@ export default function Dashboard() {
                       <p className="text-xs text-stone-300 text-center py-8 italic">No goals for this view.</p>
                     ) : fundGoals.map(g => {
                       const sc = GOAL_STATUS_COLORS[g.status] ?? GOAL_STATUS_COLORS['Not started']
-                      const expanded = expandedGoalId === g.id
                       return (
                         <div key={g.id} className="px-5 py-3.5">
                           <div className="flex items-start justify-between gap-2">
@@ -610,20 +661,12 @@ export default function Dashboard() {
                               {g.due_date && <span>Due: <span className="text-stone-500">{g.due_date}</span></span>}
                             </div>
                           )}
-                          {goalTab !== 'three_year_vision' && (
+                          {goalTab !== 'three_year_vision' && getDetailsUrl(g.updates) && (
                             <div className="flex justify-end mt-1">
-                              <button onClick={() => setExpandedGoalId(expanded ? null : g.id)}
-                                className="text-[11px] text-stone-300 hover:text-stone-500 underline transition-colors">
-                                {expanded ? 'Hide' : 'View Updates'}
-                              </button>
-                            </div>
-                          )}
-                          {expanded && (
-                            <div className="mt-2 pt-2 border-t border-stone-50">
-                              {g.updates
-                                ? <p className="text-[11px] text-stone-500 leading-relaxed whitespace-pre-wrap">{g.updates}</p>
-                                : <p className="text-[11px] text-stone-300 italic">No updates yet.</p>
-                              }
+                              <a href={getDetailsUrl(g.updates)!} target="_blank" rel="noopener noreferrer"
+                                className="text-[11px] text-stone-400 hover:text-stone-600 underline transition-colors">
+                                Full update →
+                              </a>
                             </div>
                           )}
                         </div>
