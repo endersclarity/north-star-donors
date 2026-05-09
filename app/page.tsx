@@ -6,7 +6,7 @@ import { cacheRead, cacheWrite, TTL_SHORT } from '@/lib/cache'
 import Sidebar from '@/components/Sidebar'
 
 /* â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-type TaskLabel = 'Proof Reading' | 'Graphic Design' | 'Grant Writing' | 'Blog Post' | 'Brainstorming' | 'Research' | 'Technical' | 'Editing' | 'Stakeholder Outreach' | 'Other'
+type TaskLabel = 'Proof Reading' | 'Graphic Design' | 'Grant Writing' | 'Blog Post' | 'Brainstorming' | 'Research' | 'Technical' | 'Editing' | 'Decision' | 'Needs Review' | 'Stakeholder Outreach' | 'Other'
 type TaskDomain = 'Donors' | 'Members' | 'Sponsors' | 'Grants' | 'Earned Revenue' | 'Infrastructure'
 type TaskStatus = 'todo' | 'in_progress' | 'done'
 
@@ -23,7 +23,7 @@ interface Task {
   created_at: string
 }
 
-const LABELS: TaskLabel[] = ['Proof Reading', 'Graphic Design', 'Grant Writing', 'Blog Post', 'Brainstorming', 'Research', 'Technical', 'Editing', 'Stakeholder Outreach', 'Other']
+const LABELS: TaskLabel[] = ['Proof Reading', 'Graphic Design', 'Grant Writing', 'Blog Post', 'Brainstorming', 'Research', 'Technical', 'Editing', 'Decision', 'Needs Review', 'Stakeholder Outreach', 'Other']
 const DOMAINS: TaskDomain[] = ['Donors', 'Members', 'Sponsors', 'Grants', 'Earned Revenue', 'Infrastructure']
 
 const LABEL_COLORS: Record<TaskLabel, string> = {
@@ -35,6 +35,8 @@ const LABEL_COLORS: Record<TaskLabel, string> = {
   'Research':       'bg-cyan-100 text-cyan-700 border-cyan-200',
   'Technical':      'bg-slate-100 text-slate-700 border-slate-200',
   'Editing':        'bg-orange-100 text-orange-700 border-orange-200',
+  'Decision':        'bg-indigo-100 text-indigo-700 border-indigo-200',
+  'Needs Review':    'bg-lime-100 text-lime-800 border-lime-300',
   'Stakeholder Outreach': 'bg-yellow-100 text-yellow-800 border-yellow-200',
   'Other':          'bg-stone-100 text-stone-500 border-stone-200',
 }
