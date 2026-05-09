@@ -29,6 +29,8 @@ const MORE_NAV = [
   { id: 'lists', label: 'Lists', icon: List, href: '/lists/' },
 ] as const
 
+const ASSET_BASE = process.env.NODE_ENV === 'production' ? '/north-star-donors' : ''
+
 interface Props {
   activePage?: string
 }
@@ -81,7 +83,7 @@ export default function Sidebar({ activePage }: Props) {
     <div style={{ display: 'flex', minHeight: '100vh', flexShrink: 0 }}>
       <aside style={{ width: 220, background: '#2a2a2e', minHeight: '100vh', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '20px 20px 14px' }}>
-          <img src="/north-star-donors/assets/logo.png" alt="North Star House" style={{ width: 195 }} />
+          <img src={`${ASSET_BASE}/assets/logo.png`} alt="North Star House" style={{ width: 195 }} />
         </div>
         <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.08)' }} />
         <nav style={{ flex: 1, padding: '8px 8px 0' }}>

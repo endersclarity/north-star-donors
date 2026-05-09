@@ -1,6 +1,7 @@
 ﻿'use client'
+import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
-import { LayoutDashboard, Plus, X, Check, Circle, Pencil, ChevronRight, Paperclip, FileText, User, ExternalLink } from 'lucide-react'
+import { Archive, ChevronDown, LayoutDashboard, Plus, X, Check, Circle, Pencil, ChevronRight, Paperclip, FileText, User, ExternalLink } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { cacheRead, cacheWrite, TTL_SHORT } from '@/lib/cache'
 import Sidebar from '@/components/Sidebar'
@@ -51,6 +52,14 @@ const DOMAIN_COLORS: Record<TaskDomain, string> = {
 }
 
 const STATUS_CYCLE: Record<TaskStatus, TaskStatus> = { todo: 'in_progress', in_progress: 'done', done: 'todo' }
+
+const MEETING_ARCHIVE = [
+  {
+    date: 'May 7, 2026',
+    summary: "First developer's meeting. Developer cadence. Sponsorship packet.",
+    href: '/meeting-archive/2026-05-07/',
+  },
+] as const
 
 function nextFirstThursday(): Date {
   const now = new Date()
@@ -329,6 +338,7 @@ export default function Dashboard() {
   const [goalTab, setGoalTab] = useState<GoalType>('annual')
 
   const [showAdd, setShowAdd] = useState(false)
+  const [archiveOpen, setArchiveOpen] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newLabels, setNewLabels] = useState<TaskLabel[]>([])
   const [newDomains, setNewDomains] = useState<TaskDomain[]>([])
@@ -508,6 +518,39 @@ export default function Dashboard() {
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
               Next Meeting: {fmtMeeting(nextFirstThursday())}
             </span>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setArchiveOpen(open => !open)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-stone-200 text-xs font-medium text-stone-600 shadow-sm hover:border-amber-200 hover:text-stone-800"
+                aria-expanded={archiveOpen}
+              >
+                <Archive size={12} />
+                Meeting Archive
+                <ChevronDown size={12} className={`transition-transform ${archiveOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {archiveOpen && (
+                <div className="absolute left-0 top-8 z-20 w-80 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-lg">
+                  <div className="border-b border-stone-100 px-3 py-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-stone-400">Previous meetings</p>
+                  </div>
+                  <div className="p-1.5">
+                    {MEETING_ARCHIVE.map(meeting => (
+                      <Link
+                        key={meeting.href}
+                        href={meeting.href}
+                        className="block rounded-lg px-3 py-2.5 hover:bg-amber-50"
+                        onClick={() => setArchiveOpen(false)}
+                      >
+                        <p className="text-xs font-semibold text-stone-800">{meeting.date}</p>
+                        <p className="mt-1 text-[11px] leading-snug text-stone-500">{meeting.summary}</p>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Add task form */}
