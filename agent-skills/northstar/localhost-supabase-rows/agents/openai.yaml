@@ -1,0 +1,7 @@
+interface:
+  display_name: "Localhost Supabase Rows"
+  short_description: "Add protected localhost Supabase rows"
+  default_prompt: "Use $localhost-supabase-rows to add a protected row to the mirror-backed localhost Supabase app."
+
+policy:
+  allow_implicit_invocation: true

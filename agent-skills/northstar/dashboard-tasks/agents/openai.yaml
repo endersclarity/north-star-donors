@@ -1,0 +1,4 @@
+interface:
+  display_name: "dashboard-tasks"
+  short_description: "Codex port of dashboard-tasks workflow"
+  default_prompt: "Use dashboard-tasks for the current task."

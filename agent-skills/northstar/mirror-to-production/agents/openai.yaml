@@ -1,0 +1,4 @@
+interface:
+  display_name: "Mirror to Production"
+  short_description: "Safely promote Mirror work to Haley's live app"
+  default_prompt: "Use $mirror-to-production to promote this Mirror task or artifact into Haley's live Master Portal safely."
